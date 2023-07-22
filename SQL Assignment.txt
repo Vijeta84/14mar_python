@@ -1,0 +1,240 @@
+*SQL ASSIGNMENT*
+
+TASK 1:
+
+1) Return the FirstName, LastName , ProductName and Sales Price for all products sold in month of 
+October 2022.
+
+SELECT
+  tblcustomer.firstname,
+  tblcustomer.lastname,
+  tblproduct.prd_name AS ProductName,
+  tblsales.salesprice
+FROM
+  tblsales 
+JOIN
+  tblCustomer ON tblsales.cust_id = tblcustomer.customer_id
+JOIN
+  tblProduct ON tblsales.product_id = tblproduct.prd_id
+WHERE
+  MONTH(tblsales.salesdate) = 10
+  AND YEAR(tblsales.salesdate) = 2022;
+
+2) Return the CustomerID, FirstName, and LastName of those individuals in the Customer table who 
+have made no Sales purchases.
+
+SELECT
+  tblcustomer.customer_id,
+  tblcustomer.firstname,
+  tblcustomer.lastname
+FROM
+  tblcustomer 
+LEFT JOIN
+  tblsales  ON tblcustomer.customer_id = tblsales.cust_id
+WHERE
+  tblsales.sales_id IS NULL;
+
+3) Return the FirstName, LastName, SalePrice, Recommended SalePrice, and the difference between the 
+SalePrice and Recommended SalePrice for all Sales. The difference must be returned as a positive 
+number.
+
+ SELECT
+  tblcustomer.firstname,
+  tblcustomer.lastname,
+  tblsales.salesprice,
+  tblproduct.recommended_price AS RecommendedSalePrice,
+  ABS(tblsales.salesprice - tblproduct.recommended_price) AS PriceDifference
+FROM
+  tblsales
+  INNER JOIN tblcustomer ON tblsales.cust_id = tblcustomer.customer_id
+  INNER JOIN tblproduct ON tblsales.product_id = tblproduct.prd_id;
+
+4)) Add the following Customer and Sale information to the database. (using store procedure) 
+FirstName : Mansi 
+LastName : Joshi
+City: Mumbai 
+State:MH 
+Zip:400001 
+ProductID:3 
+SalePrice:205 
+SaleDate:05/12/2022
+
+DELIMITER $$
+
+CREATE PROCEDURE indata()
+BEGIN
+
+
+INSERT INTO tblcustomer(firstname,lastname,city,state,zip) VALUES("Mansi","Joshi","Mumbai","MH",400001);
+INSERT INTO tblsales(product_id,salesprice,salesdate) VALUES(3,205,"2022-12-05");
+
+
+
+
+
+END
+
+--CALL indata();
+
+5)Return the Product Category and the average Sale Price for those customers who have purchased two 
+or more products.
+
+  SELECT
+  tblproduct.category,
+  AVG(tblsales.salesprice) AS AverageSalePrice
+FROM
+  tblproduct 
+  INNER JOIN tblsales ON tblproduct.prd_id = tblsales.product_id
+WHERE
+  tblsales.cust_id IN (
+    SELECT cust_id
+    FROM tblsales
+    GROUP BY cust_id
+    HAVING COUNT(DISTINCT product_id) >= 2
+  )
+GROUP BY
+  tblproduct.category;
+
+6)Update the Sale Price to the Recommended Sale Price of those Sales occurring between 
+6/10/2022and6/20/2022.
+
+UPDATE tblsales
+SET salesprice = (
+    SELECT tblproduct.recommended_price
+    FROM tblproduct
+    WHERE tblsales.product_id = tblproduct.prd_id
+)
+WHERE salesdate >= '2022-06-10' AND salesdate <= '2022-06-20';
+
+7)Number of Sales by Product Category where the average Recommended Priceis10 or more dollars 
+greater than the average Sale Price.
+
+8)Largest order taken by each salesperson, date wise.
+
+SELECT tblsales.salesdate, tblcustomer.firstname, tblcustomer.lastname, MAX(tblsales.salesprice) AS LargestOrder
+FROM tblsales
+JOIN tblcustomer ON tblsales.cust_id = tblcustomer.customer_id
+JOIN tblproduct ON tblsales.product_id = tblproduct.prd_id
+GROUP BY tblsales.salesdate, tblcustomer.firstname, tblcustomer.lastname;
+
+9)Without using a declared iterative construct, return Sale Date and the running total for all sales, 
+ordered by the Sale Date in Ascending Order.
+
+SELECT salesdate, SUM(salesprice) OVER (ORDER BY salesdate ASC) AS RunningTotal
+FROM tblsales
+ORDER BY salesdate ASC;
+
+
+
+TASK 2:
+
+
+1) Select the detail of the employee whose name start with P.
+
+  SELECT * FROM employee WHERE name LIKE 'P%';
+
+2) How many permanent candidate take salary more than 5000.
+ 
+   SELECT COUNT(*) AS count_permanent_candidates
+   FROM empsalary
+   WHERE is_permanent = 'yes' AND salary > 5000;
+
+3) Select the detail of employee whose emailed is in Gmail.
+
+   SELECT * FROM employee WHERE email_id LIKE '%@gmail.com';
+
+4) Select the details of the employee who work either for department E-104 or E-102.
+   
+   SELECT * FROM employee WHERE department IN ('E-104', 'E-102');
+
+5) What is the department name for DeptID E-102?
+   SELECT dept_name FROM empdept WHERE dept_id = 'E-102';
+
+6) What is total salary that is paid to permanent employees?
+
+   SELECT SUM(salary) AS total_salary
+   FROM empsalary
+   WHERE is_permanent = 'yes';
+
+7) List name of all employees whose name ends with a.
+   
+   SELECT emp_name FROM employee WHERE emp_name LIKE '%a';
+
+8) List the number of department of employees in each project.
+
+   SELECT empproject.ProjectID, COUNT(DISTINCT empdept.dept_id) AS DepartmentCount
+   FROM empproject
+   JOIN employee ON empproject.EmpID = employee.empid
+   JOIN empdept ON employee.department = empdept.dept_id
+   GROUP BY empproject.ProjectID;
+
+9) How many project started in year 2010.
+
+   SELECT COUNT(*) AS ProjectCount
+   FROM empproject
+   WHERE startyear = 2010;
+
+10)How many project started and finished in the same year.
+
+   SELECT COUNT(*) AS ProjectCount
+   FROM empproject
+   WHERE startyear = endyear;
+
+11)Select the name of the employee whose name's 3rd character is 'h'.
+
+   SELECT * FROM employee WHERE emp_name LIKE '__h%';
+
+12)Select the department name of the company which is assigned to the employee whose employee id is 
+grater 103.
+
+   SELECT empdept.dept_name
+   FROM employee
+   JOIN empdept ON employee.department = empdept.dept_id
+   WHERE employee.empid > 103;
+
+13)Select the name of the employee who is working under Abhishek.
+
+   SELECT employee.emp_name
+   FROM employee
+   JOIN employee E2 ON employee.emp_headid = E2.empid
+   WHERE E2.emp_name = 'Abhishek';
+
+14)Select the name of the employee who is department head of HR.
+
+   SELECT employee.emp_name
+   FROM employee
+   JOIN empdept ON employee.empid = empdept.dept_head
+   WHERE empdept.dept_name = 'HR';
+
+15)Select the name of the employee head who is permanent.
+
+   SELECT employee.emp_name
+   FROM employee
+   JOIN empsalary ON employee.empid = empsalary.EmpId
+   WHERE empsalary.is_permanent = 'Yes';
+
+16)Select the name and email of the Dept Head who is not Permanent.
+
+   SELECT employee.emp_name
+   FROM employee
+   JOIN empsalary ON employee.empid = empsalary.EmpId
+   WHERE empsalary.is_permanent = 'No';
+
+17)Select the employee whose department off is Monday.
+
+   SELECT employee.emp_name
+   FROM employee
+   JOIN empdept ON employee.emp_headid = empdept.dept_head
+   WHERE empdept.dept_off = 'Monday';
+
+18)Select the Indian clients details.
+
+   SELECT* FROM clienttable
+   JOIN country ON clienttable.cId = country.c_id
+   WHERE country.c_name = 'India';
+
+19)Select the details of all employee working in development department.
+
+   SELECT* FROM employee
+   JOIN empdept ON employee.emp_headid = empdept.dept_head
+   WHERE empdept.dept_name = 'Development';
